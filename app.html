@@ -76,7 +76,7 @@ body{font-family:var(--font);background:var(--bg0);color:var(--tx1);font-size:17
 .lock{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg0);transition:opacity .6s,visibility .6s}
 .lock::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 50% 40%,rgba(61,124,245,.05),transparent 70%),radial-gradient(ellipse 400px 300px at 30% 60%,rgba(34,211,168,.03),transparent 60%)}
 .lock.out{opacity:0;visibility:hidden;pointer-events:none}
-.lock-c{text-align:center;position:relative;z-index:1;max-width:380px;width:100%;padding:0 20px}
+.lock-c{text-align:center;position:relative;z-index:1;max-width:400px;width:100%;padding:0 20px}
 .lock-logo{width:72px;height:72px;margin:0 auto 24px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:20px;display:flex;align-items:center;justify-content:center;animation:breathe 4s ease-in-out infinite;position:relative}
 .lock-logo::after{content:'';position:absolute;inset:-3px;border-radius:23px;background:linear-gradient(135deg,var(--ac),var(--ac2));opacity:.15;filter:blur(12px)}
 .lock-logo svg{width:30px;height:30px;stroke:white;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -94,6 +94,24 @@ body{font-family:var(--font);background:var(--bg0);color:var(--tx1);font-size:17
 .lock-feat{display:flex;gap:24px;justify-content:center;margin-top:36px;color:var(--tx3);font-size:14px;font-weight:500}
 .lock-feat div{display:flex;align-items:center;gap:5px}
 .lock-feat svg{width:12px;height:12px}
+.lock-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg2);border-radius:var(--rs);padding:3px;border:1px solid var(--bd)}
+.lock-tab{flex:1;padding:8px;font-size:12px;font-weight:600;border-radius:5px;border:none;cursor:pointer;background:transparent;color:var(--tx3);transition:var(--tr)}
+.lock-tab.on{background:var(--ac);color:white}
+.lock-sub{display:flex;gap:4px;margin-bottom:12px}
+.lock-sub .lock-tab{padding:6px;font-size:11px}
+.lock-panel{display:none}.lock-panel.on{display:block}
+.lock-fi{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx1);font-family:var(--font);font-size:13px;outline:none;transition:var(--tr);margin-bottom:8px}
+.lock-fi:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acg)}
+.lock-fi::placeholder{color:var(--tx3)}
+.lock-fi[type="password"]{font-family:var(--mono);letter-spacing:2px}
+.lock-fi[type="password"]::placeholder{letter-spacing:0;font-family:var(--font)}
+.lock-bt{width:100%;padding:11px;border-radius:var(--rs);border:none;cursor:pointer;font-size:13px;font-weight:600;transition:var(--tr);font-family:var(--font)}
+.lock-bt-p{background:var(--ac);color:white}.lock-bt-p:hover{background:var(--ach)}
+.lock-info{font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.5}
+@keyframes syncSpin{to{transform:rotate(360deg)}}
+.sync-icon{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--tx3);margin-left:6px}
+.sync-icon.active svg{animation:syncSpin 1s linear infinite}
+.sync-icon.done{color:var(--gn)}
 
 /* ════════ APP SHELL ════════ */
 .app{display:flex;height:100vh;opacity:0;pointer-events:none;transition:opacity .5s}
@@ -451,11 +469,44 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <div class="lock-logo"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="15" r="1.5"/><line x1="12" y1="16.5" x2="12" y2="18"/></svg></div>
   <h1>WARDKEY</h1>
   <div class="lock-tag">Your digital vault · Local-first encryption · You hold the keys</div>
-  <div class="lock-form">
-    <input type="password" id="mpIn" placeholder="Master password" autofocus>
-    <button class="lock-go" onclick="unlock()"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+  <div class="lock-tabs">
+    <button class="lock-tab on" id="ltLocal" onclick="authTab('local')">Local Only</button>
+    <button class="lock-tab" id="ltCloud" onclick="authTab('cloud')">Cloud Sync</button>
   </div>
-  <div class="lock-hint">Demo: any 4+ character password</div>
+  <!-- LOCAL ONLY PANEL -->
+  <div class="lock-panel on" id="lpLocal">
+    <div class="lock-form">
+      <input type="password" id="mpIn" placeholder="Master password" autofocus>
+      <button class="lock-go" onclick="unlock()"><svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+    </div>
+    <div class="lock-hint">Enter your master password (4+ characters)</div>
+    <div class="lock-info">Your vault stays on this device. No account needed.</div>
+  </div>
+  <!-- CLOUD SYNC PANEL -->
+  <div class="lock-panel" id="lpCloud">
+    <div class="lock-sub">
+      <button class="lock-tab on" id="ltLogin" onclick="authMode('login')">Login</button>
+      <button class="lock-tab" id="ltReg" onclick="authMode('register')">Register</button>
+    </div>
+    <!-- LOGIN FORM -->
+    <div class="lock-panel on" id="lpLogin" style="text-align:left">
+      <input type="email" class="lock-fi" id="alEmail" placeholder="Email address" autocomplete="email">
+      <input type="password" class="lock-fi" id="alPw" placeholder="Account password" autocomplete="current-password">
+      <input type="password" class="lock-fi" id="alMp" placeholder="Master password (vault decryption)" style="font-family:var(--mono);letter-spacing:2px">
+      <button class="lock-bt lock-bt-p" onclick="doLogin()">Login & Unlock</button>
+      <div class="lock-info">Sync your encrypted vault across devices.</div>
+    </div>
+    <!-- REGISTER FORM -->
+    <div class="lock-panel" id="lpReg" style="text-align:left">
+      <input type="text" class="lock-fi" id="arName" placeholder="Your name" autocomplete="name">
+      <input type="email" class="lock-fi" id="arEmail" placeholder="Email address" autocomplete="email">
+      <input type="password" class="lock-fi" id="arPw" placeholder="Account password (8+ characters)" autocomplete="new-password">
+      <input type="password" class="lock-fi" id="arPwC" placeholder="Confirm account password" autocomplete="new-password">
+      <input type="password" class="lock-fi" id="arMp" placeholder="Master password (4+ characters, for vault encryption)" style="font-family:var(--mono);letter-spacing:2px">
+      <button class="lock-bt lock-bt-p" onclick="doRegister()">Create Account & Unlock</button>
+      <div class="lock-info">Your master password never leaves your device. The server only sees encrypted data.</div>
+    </div>
+  </div>
   <div class="lock-err" id="lErr">Minimum 4 characters required</div>
   <div class="lock-feat">
     <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>AES-256-GCM</div>
@@ -476,7 +527,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <div style="font-size:8px;color:var(--tx3)">Unlimited AI · Multi-device sync</div>
     </div>
   </div>
-  <div class="sb-foot"><div class="sb-av">D</div><div class="sb-u"><div class="sb-un">David</div><div class="sb-up">Free Plan</div></div><button class="sb-lk" onclick="lock()" title="Lock vault"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></button></div>
+  <div class="sb-foot"><div class="sb-av" id="sbAv">D</div><div class="sb-u"><div class="sb-un" id="sbName">User</div><div class="sb-up"><span id="sbPlan">Free Plan</span><span class="sync-icon" id="syncIco"></span></div></div><button class="sb-lk" onclick="lock()" title="Lock vault"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></button></div>
 </div>
 <div class="mn">
   <div class="ban ban-t" id="tBan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><strong>Travel Mode Active</strong> — Sensitive items are hidden<button class="bt bt-g" style="margin-left:auto" onclick="toggleTravel()">Disable</button></div>
@@ -607,6 +658,26 @@ let V={passwords:[],cards:[],notes:[],totp:[],shares:[],emergency:[],breaches:[]
 let pg='dashboard',curD=null,editI=null,sq='',af='all',travel=false,clipI=null,clipS=0,mk=null,addTp='password';
 let gL=20,gO={upper:1,lower:1,num:1,sym:1},gM='password',gW=5;
 
+// ════════ AUTH & SYNC STATE ════════
+const API='https://api.wardkey.io';
+let authToken=null,authUser=null,syncEnabled=false,lastSyncTime=null,syncInProgress=false;
+
+function saveAuth(){
+  if(authToken&&authUser){
+    localStorage.setItem('wardkey_auth',JSON.stringify({token:authToken,user:authUser,sync:syncEnabled,lastSync:lastSyncTime}));
+  }else{localStorage.removeItem('wardkey_auth')}
+}
+function loadAuth(){
+  try{
+    const raw=localStorage.getItem('wardkey_auth');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    authToken=d.token||null;authUser=d.user||null;syncEnabled=!!d.sync;lastSyncTime=d.lastSync||null;
+    IS_PRO=authUser?.plan==='pro';
+  }catch{authToken=null;authUser=null;syncEnabled=false}
+}
+loadAuth();
+
 // ════════ CRYPTO (HARDENED) ════════
 // Security architecture:
 // - AES-256-GCM encryption (authenticated encryption with associated data)
@@ -651,6 +722,58 @@ async function saveV() {
   const e = await encrypt(V, mk);
   const stored = {v:CRYPTO_VERSION, salt:[...window._vaultSalt], verify:window._verifyHash, data:e};
   localStorage.setItem('wardkey_v4', JSON.stringify(stored));
+  if(syncEnabled&&authToken)syncUp(stored);
+}
+
+// ════════ CLOUD SYNC ════════
+async function syncUp(stored){
+  if(syncInProgress||!authToken)return;
+  syncInProgress=true;updateSyncIcon('active');
+  try{
+    const res=await fetch(API+'/api/vault',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify(stored)});
+    if(res.status===401){authToken=null;saveAuth();toast('Session expired — please log in again','er');updateSyncIcon('');return}
+    if(res.status===409){toast('Vault conflict — server has a newer version. Use Sync Now in Settings.','er');updateSyncIcon('');return}
+    if(!res.ok)throw new Error('Sync failed');
+    lastSyncTime=Date.now();updateSyncIcon('done');
+  }catch(e){updateSyncIcon('');console.error('Sync up error:',e.message)}
+  finally{syncInProgress=false}
+}
+async function syncDown(){
+  if(!authToken)return;
+  syncInProgress=true;updateSyncIcon('active');
+  try{
+    const res=await fetch(API+'/api/vault',{headers:{'Authorization':'Bearer '+authToken}});
+    if(res.status===401){authToken=null;saveAuth();toast('Session expired — please log in again','er');updateSyncIcon('');return}
+    if(!res.ok)throw new Error('Sync download failed');
+    const data=await res.json();
+    if(data.data){
+      localStorage.setItem('wardkey_v4',JSON.stringify(data));
+      // Re-decrypt with current master key
+      const p=data;
+      const salt=new Uint8Array(p.salt);
+      V=await decrypt(p.data,mk);
+      window._vaultSalt=salt;
+      ['apikeys','licenses','trash','activity','passkeys','aliases','shares','emergency'].forEach(k=>{if(!V[k])V[k]=[]});
+      lastSyncTime=Date.now();updateSyncIcon('done');
+      render();updC();toast('Vault synced from cloud','ok');
+    }else{updateSyncIcon('done')}
+  }catch(e){updateSyncIcon('');toast('Sync failed: '+e.message,'er')}
+  finally{syncInProgress=false}
+}
+function updateSyncIcon(state){
+  const el=$('syncIco');if(!el)return;
+  el.className='sync-icon'+(state?' '+state:'');
+  if(state==='active')el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Syncing…';
+  else if(state==='done')el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Synced';
+  else el.innerHTML='';
+}
+
+function updateSidebar(){
+  const name=authUser?.name||'User';
+  const el=$('sbName');if(el)el.textContent=name;
+  const av=$('sbAv');if(av)av.textContent=name.charAt(0).toUpperCase();
+  const plan=$('sbPlan');if(plan)plan.textContent=syncEnabled?(authUser?.plan==='pro'?'Pro Plan':'Free Plan · Cloud'):'Local Mode';
+  if(syncEnabled)updateSyncIcon('done');
 }
 
 async function loadV(pw) {
@@ -708,79 +831,14 @@ function secureClear() {
   window._cpw = null;
   // Clear clipboard if we wrote to it
   try { navigator.clipboard.writeText(''); } catch {}
+  // Note: authToken/authUser/syncEnabled are preserved across locks (session persistence)
+  // They are only cleared on explicit logout or vault wipe
 }
 
-// ════════ DEMO DATA ════════
-function seed(){const n=Date.now(),d=x=>n-864e5*x;
-V={passwords:[
-{id:'p1',name:'Google Workspace',username:'david@gmail.com',password:'Kx#9mPq!v2zL8nW4',url:'https://accounts.google.com',cat:'email',tags:['work','primary'],notes:'Main business account · 2FA enabled via Titan key',created:d(90),modified:d(5),history:[{pw:'OldPass123!',at:d(30)}],icon:'🔵',fav:true,sens:false,fields:[{l:'Recovery Phone',v:'+972-XX-XXX-4829'}],rotate:{enabled:true,days:30,lastRotated:d(25)}},
-{id:'p2',name:'GitHub',username:'david-dev',password:'Gh$7rYp&3xKm2Qw!9B',url:'https://github.com',cat:'dev',tags:['dev','git'],notes:'SSH keys configured · 2FA via authenticator',created:d(120),modified:d(2),history:[],icon:'⚫',fav:true,sens:false,fields:[{l:'Recovery Codes',v:'8f92k-3mx7p'}],rotate:{enabled:true,days:60,lastRotated:d(50)}},
-{id:'p3',name:'Binance Pro',username:'david_crypto',password:'Bn@5tZ!k9WmP#xR2vLq8',url:'https://binance.com',cat:'finance',tags:['crypto','trading'],notes:'Whitelisted withdrawal addresses only · Hardware 2FA',created:d(60),modified:d(1),history:[],icon:'🟡',fav:false,sens:true,fields:[],rotate:{enabled:true,days:30,lastRotated:d(28)}},
-{id:'p4',name:'Netflix',username:'david@gmail.com',password:'password123',url:'https://netflix.com',cat:'streaming',tags:['family'],notes:'',created:d(200),modified:d(200),history:[],icon:'🔴',fav:false,sens:false,fields:[]},
-{id:'p5',name:'AWS Root Account',username:'admin@company.com',password:'Aw$9kLm#2pXz!vQ7nBe3',url:'https://aws.amazon.com',cat:'dev',tags:['cloud','infra'],notes:'ROOT — Use IAM roles for daily access',created:d(45),modified:d(10),history:[],icon:'🟠',fav:true,sens:true,fields:[{l:'Account ID',v:'847291056342'}],rotate:{enabled:true,days:90,lastRotated:d(80)}},
-{id:'p6',name:'Spotify Family',username:'david.music',password:'Sp0t!fy#2024Kz',url:'https://spotify.com',cat:'streaming',tags:['music'],notes:'6-person family plan',created:d(150),modified:d(30),history:[],icon:'🟢',fav:false,sens:false,fields:[]},
-{id:'p7',name:'Bank Leumi Online',username:'david_leumi',password:'BkL@!93xQz#7pWm2Xv',url:'https://leumi.co.il',cat:'finance',tags:['banking','primary'],notes:'Main checking + savings',created:d(300),modified:d(15),history:[],icon:'🏦',fav:true,sens:true,fields:[{l:'Card PIN',v:'9274'},{l:'Branch',v:'Haifa Central'}],rotate:{enabled:true,days:180,lastRotated:d(40)}},
-{id:'p8',name:'Twitter / X',username:'@david_tech',password:'david2024',url:'https://x.com',cat:'social',tags:['social'],notes:'',created:d(180),modified:d(180),history:[],icon:'✖️',fav:false,sens:false,fields:[]},
-{id:'p9',name:'Vercel',username:'david@company.com',password:'Vc#8kPm!2xLz9QwR4n',url:'https://vercel.com',cat:'dev',tags:['hosting'],notes:'Pro plan · Connected to GitHub',created:d(30),modified:d(3),history:[],icon:'▲',fav:false,sens:false,fields:[]},
-{id:'p10',name:'Phantom Wallet',username:'main_wallet',password:'Ph@nt0m!Kz9xQw2#v3Bm8',url:'https://phantom.app',cat:'finance',tags:['crypto','solana'],notes:'Primary Solana wallet · Seed phrase stored in Secure Notes',created:d(20),modified:d(1),history:[],icon:'👻',fav:true,sens:true,fields:[{l:'Public Key',v:'4WsU...SerJ'}]},
-{id:'p11',name:'Discord',username:'david#1337',password:'discord123',url:'https://discord.com',cat:'social',tags:['gaming','social'],notes:'',created:d(100),modified:d(100),history:[],icon:'💜',fav:false,sens:false,fields:[]},
-{id:'p12',name:'Anthropic Console',username:'david@company.com',password:'An#9kXz!Pm2Qw7vR4bL8',url:'https://console.anthropic.com',cat:'dev',tags:['ai','api'],notes:'Claude API access',created:d(10),modified:d(1),history:[],icon:'🤖',fav:true,sens:false,fields:[]},
-],
-cards:[
-{id:'c1',name:'Visa Platinum',type:'visa',number:'4532 •••• •••• 8921',exp:'09/27',cvv:'482',holder:'DAVID COHEN',pin:'4829',billing:'123 Carmel Ave, Haifa',color:'#0a1628',notes:'Primary card',fav:false},
-{id:'c2',name:'Mastercard Gold',type:'mc',number:'5412 •••• •••• 3367',exp:'03/28',cvv:'715',holder:'DAVID COHEN',pin:'7361',billing:'',color:'#1a0a2e',notes:'Business expenses',fav:false},
-{id:'c3',name:'Israeli Teudat Zehut',type:'id',number:'•••••••542',exp:'2030',cvv:'',holder:'David Cohen',pin:'',billing:'',color:'#0a1a12',notes:'National ID',fav:false},
-],
-notes:[
-{id:'n1',name:'Phantom Seed Phrase',content:'abandon ability able about above absent absorb abstract absurd abuse access accident\n\n⚠️ NEVER share this phrase. Store offline backup in safe.',tags:['crypto','critical'],created:d(20),modified:d(1),color:'rd',fav:true,sens:true},
-{id:'n2',name:'SSH Key — Production',content:'-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAA... (truncated for demo)\n-----END OPENSSH PRIVATE KEY-----',tags:['dev','infra'],created:d(60),modified:d(10),color:'pp',fav:false,sens:true},
-{id:'n3',name:'WiFi Passwords',content:'Home: CohenFamily_5G → Kz9xQw2#mP!v\nGuest: Cohen_Guest → welcome2024\nOffice: DevHub5G → Xm#9pQz!2kLv',tags:['home','office'],created:d(90),modified:d(30),color:'cy',fav:false,sens:false},
-{id:'n4',name:'Server Recovery Codes',content:'1. 8f92k-3mx7p\n2. q4z8n-7rw2k\n3. m5x9p-2vk8j\n4. k7n2x-9pm3q\n5. r8w4z-6kn7m',tags:['dev','recovery'],created:d(120),modified:d(120),color:'gn',fav:false,sens:true},
-],
-totp:[
-{id:'t1',name:'Google',acct:'david@gmail.com',secret:'JBSWY3DPEHPK3PXP',icon:'🔵',color:'#4285f4'},
-{id:'t2',name:'GitHub',acct:'david-dev',secret:'GEZDGNBVGY3TQOJQ',icon:'⚫',color:'#24292e'},
-{id:'t3',name:'Binance',acct:'david_crypto',secret:'KVKFKRCPNZQUYMLXOVYDSQKGOJRG',icon:'🟡',color:'#f0b90b'},
-{id:'t4',name:'AWS',acct:'admin@company.com',secret:'HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ',icon:'🟠',color:'#ff9900'},
-{id:'t5',name:'Anthropic',acct:'david@company.com',secret:'JBSWY3DPEHPK3PXQ',icon:'🤖',color:'#d97757'},
-],
-apikeys:[
-{id:'ak1',name:'OpenAI API',key:'sk-proj-xxxx...xxxx',svc:'openai.com',env:'production',created:d(15),exp:d(-90),notes:'GPT-4o / o1 access',tags:['ai'],fav:false},
-{id:'ak2',name:'Anthropic Claude',key:'sk-ant-api03-xxxx...xxxx',svc:'anthropic.com',env:'production',created:d(30),exp:null,notes:'Claude Sonnet & Opus',tags:['ai'],fav:true},
-{id:'ak3',name:'Stripe Live',key:'sk_live_51Hx...xxxx',svc:'stripe.com',env:'production',created:d(60),exp:null,notes:'Payment processing',tags:['payments'],fav:false},
-{id:'ak4',name:'Helius RPC',key:'xxxxxx-xxxx-xxxx-xxxx',svc:'helius.dev',env:'production',created:d(5),exp:d(-365),notes:'Solana RPC',tags:['crypto','solana'],fav:false},
-],
-licenses:[
-{id:'l1',name:'JetBrains All Products',key:'XXXXX-XXXXX-XXXXX-XXXXX',product:'IntelliJ + WebStorm + DataGrip',email:'david@company.com',exp:d(-180),notes:'Annual renewal Oct',seats:1},
-{id:'l2',name:'Figma Professional',key:'SSO Login',product:'Figma',email:'david@company.com',exp:d(-365),notes:'Company seat',seats:5},
-{id:'l3',name:'Windows 11 Pro',key:'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',product:'Windows 11',email:'david@gmail.com',exp:null,notes:'Lifetime / OEM',seats:1},
-],
-shares:[{id:'s1',name:'Netflix Login',to:'sarah@gmail.com',created:d(3),exp:n+864e5*4,views:1,maxV:3,active:true}],
-emergency:[{id:'e1',name:'Sarah Cohen',email:'sarah@gmail.com',rel:'Spouse',wait:48,status:'active',since:d(60)}],
-breaches:[
-{id:'b1',site:'LinkedIn',date:'2024-06',sev:'high',recs:'700M',type:'Email, Password hash',email:'david@gmail.com',resolved:false},
-{id:'b2',site:'Adobe',date:'2023-10',sev:'medium',recs:'153M',type:'Email',email:'david@gmail.com',resolved:true},
-{id:'b3',site:'Canva',date:'2024-01',sev:'low',recs:'139M',type:'Email',email:'david@gmail.com',resolved:true},
-],
-trash:[],
-activity:[
-{id:'a1',action:'Password updated',item:'GitHub',type:'edit',time:d(.1)},
-{id:'a2',action:'New item added',item:'Anthropic Console',type:'add',time:d(.3)},
-{id:'a3',action:'Breach alert',item:'LinkedIn',type:'breach',time:d(5)},
-{id:'a4',action:'2FA verified',item:'Google',type:'totp',time:d(.02)},
-{id:'a5',action:'Password generated',item:'',type:'gen',time:d(.5)},
-{id:'a6',action:'Shared securely',item:'Netflix Login',type:'share',time:d(3)},
-],
-passkeys:[
-{id:'pk1',name:'Google',rpId:'google.com',username:'david@gmail.com',created:d(10),lastUsed:d(0),credId:'cred_x7k2m9...a4f',alg:'ES256',icon:'🔵',fav:false},
-{id:'pk2',name:'GitHub',rpId:'github.com',username:'david-dev',created:d(5),lastUsed:d(1),credId:'cred_m3n8p2...z9q',alg:'ES256',icon:'⚫',fav:true},
-{id:'pk3',name:'Microsoft',rpId:'login.microsoft.com',username:'david@outlook.com',created:d(3),lastUsed:d(0),credId:'cred_j5w1r8...k2x',alg:'RS256',icon:'🟦',fav:false},
-],
-aliases:[
-{id:'al1',alias:'david.n8x2@wardkey.email',target:'david@gmail.com',site:'Netflix',created:d(15),active:true,forwarded:47},
-{id:'al2',alias:'david.k3m9@wardkey.email',target:'david@gmail.com',site:'Newsletter Signups',created:d(30),active:true,forwarded:132},
-{id:'al3',alias:'david.p7z4@wardkey.email',target:'david@gmail.com',site:'Shopping Sites',created:d(60),active:false,forwarded:89},
-]}}
+// ════════ VAULT INIT ════════
+function seed(){
+  V={passwords:[],cards:[],notes:[],totp:[],apikeys:[],licenses:[],passkeys:[],aliases:[],shares:[],emergency:[],breaches:[],trash:[],activity:[]};
+}
 
 // ════════ AUTH ════════
 async function unlock(){
@@ -792,31 +850,124 @@ async function unlock(){
   try{
     await loadV(pw);
     failedAttempts=0;
-    $('LS').classList.add('out');$('app').classList.add('on');buildNav();render();updC();resetAL();setTimeout(checkRotations,500);
+    $('LS').classList.add('out');$('app').classList.add('on');buildNav();render();updC();updateSidebar();resetAL();setTimeout(checkRotations,500);
   const isLight=document.documentElement.getAttribute('data-theme')==='light';
   const btn=$('thBtn');if(btn)btn.innerHTML=isLight?'<svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>':'<svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
   }catch(e){
     failedAttempts++;
     const hasVault = !!(localStorage.getItem('wardkey_v4')||localStorage.getItem('wardkey_v3'));
     if(failedAttempts>=MAX_ATTEMPTS){lockoutUntil=Date.now()+LOCKOUT_MS;$('lErr').innerHTML=`Too many failed attempts. Locked for 60 seconds.`+
-      (hasVault?`<br><a href="#" onclick="resetDemo(event)" style="color:var(--ac);font-size:11px;text-decoration:underline;margin-top:4px;display:inline-block">Forgot password? Reset vault</a>`:'')}
+      (hasVault?`<br><a href="#" onclick="resetVault(event)" style="color:var(--ac);font-size:11px;text-decoration:underline;margin-top:4px;display:inline-block">Forgot password? Reset vault</a>`:'')}
     else{$('lErr').innerHTML=`Wrong password (${MAX_ATTEMPTS-failedAttempts} attempt${MAX_ATTEMPTS-failedAttempts>1?'s':''} remaining)`+
-      (hasVault?`<br><a href="#" onclick="resetDemo(event)" style="color:var(--ac);font-size:11px;text-decoration:underline;margin-top:4px;display:inline-block">Forgot password? Reset vault</a>`:'')}
+      (hasVault?`<br><a href="#" onclick="resetVault(event)" style="color:var(--ac);font-size:11px;text-decoration:underline;margin-top:4px;display:inline-block">Forgot password? Reset vault</a>`:'')}
     $('lErr').style.display='block';
     shake($('mpIn'));$('mpIn').value='';$('mpIn').focus();return;
   }
 }
-function resetDemo(e){
+function resetVault(e){
   e.preventDefault();
-  if(!confirm('This will erase your vault and load fresh demo data. Continue?'))return;
-  localStorage.removeItem('wardkey_v4');localStorage.removeItem('wardkey_v3');
+  if(!confirm('This will permanently erase your vault. You will start fresh. Continue?'))return;
+  localStorage.removeItem('wardkey_v4');localStorage.removeItem('wardkey_v3');localStorage.removeItem('wardkey_auth');
+  authToken=null;authUser=null;syncEnabled=false;
   failedAttempts=0;lockoutUntil=0;
   $('lErr').style.display='none';$('mpIn').value='';$('mpIn').focus();
-  toast('Vault reset — enter any 4+ character password','ok');
+  toast('Vault reset — enter a new master password','ok');
 }
+// ════════ AUTH UI FUNCTIONS ════════
+function authTab(mode){
+  $('ltLocal').classList.toggle('on',mode==='local');
+  $('ltCloud').classList.toggle('on',mode==='cloud');
+  $('lpLocal').classList.toggle('on',mode==='local');
+  $('lpCloud').classList.toggle('on',mode==='cloud');
+  if(mode==='local')setTimeout(()=>$('mpIn')?.focus(),100);
+  else setTimeout(()=>$('alEmail')?.focus(),100);
+}
+function authMode(mode){
+  $('ltLogin').classList.toggle('on',mode==='login');
+  $('ltReg').classList.toggle('on',mode==='register');
+  $('lpLogin').classList.toggle('on',mode==='login');
+  $('lpReg').classList.toggle('on',mode==='register');
+  if(mode==='login')setTimeout(()=>$('alEmail')?.focus(),100);
+  else setTimeout(()=>$('arName')?.focus(),100);
+}
+async function doRegister(){
+  const name=$('arName').value.trim(),email=$('arEmail').value.trim(),pw=$('arPw').value,pwc=$('arPwC').value,mp=$('arMp').value;
+  if(!name||!email){showAuthErr('Name and email are required');return}
+  if(pw.length<8){showAuthErr('Account password must be at least 8 characters');return}
+  if(pw!==pwc){showAuthErr('Account passwords do not match');return}
+  if(mp.length<4){showAuthErr('Master password must be at least 4 characters');return}
+  showAuthErr('');
+  try{
+    const res=await fetch(API+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pw})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Registration failed');
+    authToken=data.token;authUser=data.user||{name,email,plan:'free'};syncEnabled=true;
+    saveAuth();
+    // Now unlock vault with master password
+    $('mpIn').value=mp;
+    await unlock();
+    toast('Account created — vault syncing enabled','ok');
+  }catch(e){showAuthErr(e.message)}
+}
+async function doLogin(){
+  const email=$('alEmail').value.trim(),pw=$('alPw').value,mp=$('alMp').value;
+  if(!email||!pw){showAuthErr('Email and account password are required');return}
+  if(mp.length<4){showAuthErr('Master password must be at least 4 characters');return}
+  showAuthErr('');
+  try{
+    const res=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Login failed');
+    authToken=data.token;authUser=data.user||{email,plan:'free'};syncEnabled=true;
+    saveAuth();
+    // Try to download vault from server before unlocking
+    try{
+      const vRes=await fetch(API+'/api/vault',{headers:{'Authorization':'Bearer '+authToken}});
+      if(vRes.ok){
+        const vData=await vRes.json();
+        if(vData.data){
+          // Server has a vault — store it locally so loadV picks it up
+          localStorage.setItem('wardkey_v4',JSON.stringify(vData));
+          lastSyncTime=Date.now();
+        }
+      }
+    }catch{}
+    $('mpIn').value=mp;
+    await unlock();
+    toast('Logged in — vault synced','ok');
+  }catch(e){showAuthErr(e.message)}
+}
+function showAuthErr(msg){const el=$('lErr');if(msg){el.textContent=msg;el.style.display='block'}else{el.style.display='none'}}
+function doLogout(){
+  if(!confirm('Log out? Your vault will remain on this device but cloud sync will stop.'))return;
+  authToken=null;authUser=null;syncEnabled=false;lastSyncTime=null;IS_PRO=false;
+  localStorage.removeItem('wardkey_auth');
+  updateSidebar();updateSyncIcon('');render();toast('Logged out — local mode active','ok');
+}
+async function doDeleteAccount(){
+  if(!confirm('Delete your account? This will remove your cloud data. Your local vault will be kept.'))return;
+  if(!confirm('Are you absolutely sure? This cannot be undone.'))return;
+  try{
+    const res=await fetch(API+'/api/auth/account',{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
+    if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||'Failed to delete account')}
+    authToken=null;authUser=null;syncEnabled=false;lastSyncTime=null;IS_PRO=false;
+    localStorage.removeItem('wardkey_auth');
+    updateSidebar();updateSyncIcon('');render();toast('Account deleted — vault kept locally','ok');
+  }catch(e){toast('Error: '+e.message,'er')}
+}
+
 function shake(el){el.style.animation='none';el.offsetHeight;el.style.animation='shake .4s'}
-function lock(){secureClear();$('LS').classList.remove('out');$('app').classList.remove('on');$('mpIn').value='';setTimeout(()=>$('mpIn').focus(),600)}
+function lock(){secureClear();$('LS').classList.remove('out');$('app').classList.remove('on');$('mpIn').value='';
+  // Clear cloud form fields
+  ['alEmail','alPw','alMp','arName','arEmail','arPw','arPwC','arMp'].forEach(id=>{const el=$(id);if(el)el.value=''});
+  // If user was logged in, show cloud tab
+  if(syncEnabled){authTab('cloud');authMode('login')}
+  setTimeout(()=>{if(syncEnabled)$('alMp')?.focus();else $('mpIn')?.focus()},600);
+}
 $('mpIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+// Cloud form enter-key handlers
+['alMp'].forEach(id=>{const el=$(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()})});
+['arMp'].forEach(id=>{const el=$(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister()})});
 let alT;function resetAL(){clearTimeout(alT);alT=setTimeout(lock,3e5)}
 document.addEventListener('mousemove',resetAL);document.addEventListener('keydown',resetAL);
 document.addEventListener('touchstart',resetAL);document.addEventListener('scroll',resetAL);
@@ -869,7 +1020,21 @@ function genPhrase(n=5){const a=new Uint32Array(n);crypto.getRandomValues(a);ret
 function vI(p,type,i=0){const st=type==='passwords'?str(p.password):null;const fav=p.fav||p.favorite;const hasUrl=p.url||p.rpId;const rot=type==='passwords'&&p.rotate?.enabled?getRotateStatus(p):null;return`<div class="vi" style="animation-delay:${i*.02}s" onclick="showD('${type}','${p.id}')"><div class="vi-i">${p.icon||p.favicon||'🔑'}</div><div class="vi-n"><div class="vi-t">${fav?'<span class="fv">★</span>':''}${p.name}${p.sens?' <span style="font-size:8px;color:var(--og)">🔒</span>':''}${rot?` <span style="font-size:8px;color:${rot.color}" title="Auto-rotate: ${rot.label}">🔄${rot.overdue?' !':''}</span>`:''}</div><div class="vi-d">${p.username||p.holder||p.key?.substring(0,22)||p.content?.substring(0,35)||p.product||''}</div></div><div class="vi-m">${st?`<div class="vi-sb"><div class="vi-sf" style="width:${st.s}%;background:${st.c}"></div></div>`:''}<div class="vi-a">${hasUrl?`<button class="vi-b" title="Launch & copy password" onclick="launchSite('${type}','${p.id}',event)" style="color:var(--ac)">${IC.launch}</button>`:''}<button class="vi-b" onclick="event.stopPropagation();cpItem('${type}','${p.id}')">${IC.cp}</button></div></div></div>`}
 
 // ════════ PAGE: DASHBOARD ════════
+function isVaultEmpty(){return !V.passwords.length&&!V.cards.length&&!V.notes.length&&!V.totp.length&&!V.apikeys.length&&!V.licenses.length&&!V.passkeys.length&&!V.aliases.length}
 function rDash(el){
+if(isVaultEmpty()){
+  el.innerHTML=`<div class="card" style="padding:32px;text-align:center;max-width:480px;margin:40px auto">
+  <div style="font-size:48px;margin-bottom:16px">🔐</div>
+  <div style="font-size:22px;font-weight:800;margin-bottom:6px">Welcome to WARDKEY!</div>
+  <div style="font-size:13px;color:var(--tx2);margin-bottom:24px;line-height:1.6">Your vault is empty. Let's add your first item to get started.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+    <button class="bt bt-p" onclick="addTp='password';openAdd()" style="padding:10px 18px;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Password</button>
+    <button class="bt bt-s" onclick="addTp='card';openAdd()" style="padding:10px 18px;gap:6px">💳 Add Card</button>
+    <button class="bt bt-s" onclick="addTp='note';openAdd()" style="padding:10px 18px;gap:6px">📝 Add Note</button>
+    <button class="bt bt-s" onclick="$('impMo').classList.add('on')" style="padding:10px 18px;gap:6px">📥 Import</button>
+  </div>
+  ${syncEnabled?'<div style="margin-top:16px;font-size:11px;color:var(--gn)">☁️ Cloud sync is enabled — items will sync across devices</div>':'<div style="margin-top:16px;font-size:11px;color:var(--tx3)">💡 Enable Cloud Sync in Settings to access your vault anywhere</div>'}
+</div>`;return}
 const sc=oScore(),co=sc>=80?'var(--gn)':sc>=60?'var(--yl)':sc>=40?'var(--og)':'var(--rd)';
 const ci=2*Math.PI*15,of=ci-(sc/100)*ci;
 const w=gWeak().length,r=gReused().length,o=gOld().length,bu=V.breaches.filter(b=>!b.resolved).length;
@@ -1031,6 +1196,14 @@ el.innerHTML='<div style="max-width:440px"><div class="st" style="margin-bottom:
 +'<div class="st" style="margin-bottom:12px">Vault Stats</div><div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">'
 +[['Passwords',V.passwords.length,'var(--ac)'],['Cards',V.cards.length,'var(--pp)'],['Notes',V.notes.length,'var(--cy)'],['Passkeys',V.passkeys.length,'var(--gn)'],['Aliases',V.aliases.length,'var(--og)'],['2FA',V.totp.length,'var(--yl)']].map(([l,v,c])=>'<div><div style="font-size:18px;font-weight:700;color:'+c+'">'+v+'</div><div style="font-size:9px;color:var(--tx3)">'+l+'</div></div>').join('')
 +'</div></div>'
++'<div class="st" style="margin-bottom:12px">☁️ Account & Sync</div><div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px">'
++(syncEnabled&&authUser
+?'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:14px">'+(authUser.name||'U').charAt(0).toUpperCase()+'</div><div><div style="font-size:12px;font-weight:600">'+(authUser.name||'User')+'</div><div style="font-size:10px;color:var(--tx3)">'+(authUser.email||'')+'</div></div></div>'
++'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><div style="font-size:11px;color:var(--tx2)">Sync Status</div><div style="font-size:11px;color:var(--gn);font-weight:600">'+(lastSyncTime?'Last synced '+timeAgo(lastSyncTime):'Ready')+'</div></div>'
++'<div style="display:flex;gap:5px;margin-top:10px"><button class="bt bt-s" style="flex:1" onclick="syncDown()">🔄 Sync Now</button><button class="bt bt-s" style="flex:1" onclick="doLogout()">🚪 Log Out</button></div>'
++'<button class="bt bt-d" style="width:100%;justify-content:center;margin-top:6px" onclick="doDeleteAccount()">Delete Account</button>'
+:'<div style="text-align:center;padding:8px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">Cloud Sync Disabled</div><div style="font-size:11px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Sign in to sync your encrypted vault across devices. Your master password never leaves your device.</div><button class="bt bt-p" style="margin:0 auto;display:flex" onclick="lock();authTab(\'cloud\')">Sign In / Register</button></div>')
++'</div>'
 +'<div class="st" style="margin-bottom:12px">Data</div><div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px"><div style="display:flex;gap:5px;margin-bottom:8px"><button class="bt bt-s" style="flex:1" onclick="$(\'impMo\').classList.add(\'on\')">Import</button><button class="bt bt-s" style="flex:1" onclick="doExport(\'json\')">Export JSON</button><button class="bt bt-s" style="flex:1" onclick="doExport(\'csv\')">Export CSV</button></div><button class="bt bt-d" style="width:100%;justify-content:center" onclick="wipeVault()">🗑️ Wipe Vault</button></div></div>'}
 
 // ════════ DETAIL PANEL ════════
@@ -1186,7 +1359,7 @@ function toast(msg,type='in'){const ic={ok:'<svg viewBox="0 0 24 24" stroke-line
 // ════════ AI ENGINE (Claude API) ════════
 let aiUsage={count:0,date:new Date().toDateString()};
 const AI_DAILY_LIMIT=3;
-const IS_PRO=false; // Toggle for pro users
+let IS_PRO=false; // Derived from authUser.plan when logged in
 
 function checkAiLimit(){
   const today=new Date().toDateString();

@@ -958,4 +958,15 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
 // Number counter animation
 function animateValue(el,start,end,dur){
   let st=null;const step=(ts)=>{if(!st)st=ts;const p=Math.min((ts-st)/dur,1);
-  el.text
+  el.textContent=Math.floor(p*(end-start)+start).toLocaleString();
+  if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+
+// Trigger counters when visible
+const counterObs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){
+  e.target.querySelectorAll('[data-count]').forEach(el=>{
+    animateValue(el,0,parseInt(el.dataset.count),1500)});
+  counterObs.unobserve(e.target)}})},{threshold:.2});
+document.querySelectorAll('.hero-proof').forEach(el=>counterObs.observe(el));
+</script>
+</body>
+</html>
